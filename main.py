@@ -52,7 +52,7 @@ if "document_sources" not in st.session_state:
 if "last_activity" not in st.session_state:
     st.session_state.last_activity = datetime.datetime.now()
 if "openai_api_key" not in st.session_state:
-    st.session_state.openai_api_key = os.getenv("OPENAI_API_KEY")
+    st.session_state.openai_api_key = ""
 
 def initialize_rag_model():
     if not st.session_state.openai_api_key:
