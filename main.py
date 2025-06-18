@@ -1,6 +1,5 @@
 import streamlit as st
 import os
-from dotenv import load_dotenv
 import pandas as pd
 import tempfile
 from urllib.parse import urlparse
@@ -22,12 +21,6 @@ import requests
 from googlesearch import search
 import uuid
 import datetime
-
-load_dotenv()
-
-if not os.getenv("OPENAI_API_KEY"):
-    st.error("OpenAI API key not found. Please set the OPENAI_API_KEY environment variable.")
-    st.stop()
 
 class RAGState(TypedDict):
     question: str
@@ -58,14 +51,15 @@ if "document_sources" not in st.session_state:
     st.session_state.document_sources = []
 if "last_activity" not in st.session_state:
     st.session_state.last_activity = datetime.datetime.now()
+if "openai_api_key" not in st.session_state:
+    st.session_state.openai_api_key = os.getenv("OPENAI_API_KEY")
 
 def initialize_rag_model():
-    text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=1000,
-        chunk_overlap=200
-    )
+    if not st.session_state.openai_api_key:
+        st.error("OpenAI API key not provided. Please enter your API key in the sidebar.")
+        st.stop()
 
-    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.1, streaming=True)
+    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.1, streaming=True, openai_api_key=st.session_state.openai_api_key)
 
     retrieval_prompt = ChatPromptTemplate.from_template(
         """You are an information retrieval assistant.
@@ -360,6 +354,15 @@ def main():
     check_session_timeout()
 
     with st.sidebar:
+        st.subheader("OpenAI API Key")
+        api_key_input = st.text_input("Enter your OpenAI API Key", type="password", value=st.session_state.openai_api_key)
+        if api_key_input:
+            st.session_state.openai_api_key = api_key_input
+            os.environ["OPENAI_API_KEY"] = api_key_input
+        else:
+            st.warning("Please enter your OpenAI API key to use the chatbot.")
+            st.stop()
+
         st.subheader("Add to Knowledge Base")
 
         uploaded_files = st.file_uploader(
@@ -409,7 +412,7 @@ def main():
                     if st.session_state.vectorstore is None:
                         st.session_state.vectorstore = FAISS.from_documents(
                             chunks,
-                            OpenAIEmbeddings()
+                            OpenAIEmbeddings(openai_api_key=st.session_state.openai_api_key)
                         )
                         st.success(f"Created new knowledge base with {len(chunks)} document chunks.")
                     else:
@@ -478,9 +481,13 @@ def main():
         )
 
 
-    if "rag_chain" not in st.session_state:
-         st.session_state.rag_chain, st.session_state.generation_prompt = initialize_rag_model()
-         print("LangGraph RAG chain and generation prompt initialized.")
+    if "rag_chain" not in st.session_state or "generation_prompt" not in st.session_state:
+        if st.session_state.openai_api_key:
+            st.session_state.rag_chain, st.session_state.generation_prompt = initialize_rag_model()
+            print("LangGraph RAG chain and generation prompt initialized.")
+        else:
+            st.info("Please enter your OpenAI API key in the sidebar to initialize the chatbot.")
+            st.stop()
 
 
     chat_container = st.container()
@@ -547,7 +554,7 @@ def main():
                 question=user_question
             )
 
-            llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.1, streaming=True)
+            llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.1, streaming=True, openai_api_key=st.session_state.openai_api_key)
             full_response = ""
             for chunk in llm.stream(final_prompt_value):
                 full_response += chunk.content
