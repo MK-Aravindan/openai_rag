@@ -1,0 +1,15 @@
+streamlit
+langchain
+langchain-community
+langchain-openai
+langgraph
+python-dotenv
+pandas
+unstructured
+openpyxl
+faiss-cpu
+tiktoken
+requests
+beautifulsoup4
+googlesearch-python
+uuid

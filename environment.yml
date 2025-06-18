@@ -1,0 +1,23 @@
+name: rag-streamlit-chatbot
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pip
+  - pandas
+  - openpyxl
+  - pip:
+      - streamlit
+      - langchain
+      - langchain-community
+      - langchain-openai
+      - langgraph
+      - python-dotenv
+      - unstructured
+      - faiss-cpu
+      - tiktoken
+      - requests
+      - beautifulsoup4
+      - googlesearch-python
+      - uuid

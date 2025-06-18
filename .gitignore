@@ -1,0 +1,21 @@
+# Ignore Python cache and virtual environments
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+.env.*
+.venv/
+env/
+venv/
+.idea/
+.DS_Store
+.ipynb_checkpoints/
+
+# Ignore Streamlit app secrets (if any)
+.streamlit/secrets.toml
+
+# Ignore uploads or temp files (if you use them)
+uploads/
+tmp/
+temp/
